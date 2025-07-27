@@ -1,0 +1,11 @@
+# Terraform state files
+*.tfstate
+*.tfstate.*
+*.terraform.lock*
+
+
+# Terraform plan output
+*.tfplan
+
+# Local .terraform directory (plugin binaries, modules, etc.)
+.terraform/
