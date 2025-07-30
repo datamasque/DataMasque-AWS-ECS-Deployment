@@ -240,10 +240,6 @@ resource "aws_ecs_task_definition" "admin_server" {
         { name = "MASQUE_ADMIN_DB_NAME", value = "postgres" },
         { name = "MASQUE_ADMIN_DB_USER", value = "postgres" },
         { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", "internal") },
-        # { name = "MASQUE_ADMIN_DB_PASSWORD", value = "LhiNi6Gc" },
-        # { name = "MASQUE_ADMIN_DB_PASSWORD", value = tostring(random_password.masque_admin_db_password.result) },
-        # { name = "MASQUE_ADMIN_DB_HOST", value = "admin-db.${lookup(each.value, "dnsNamespace", "internal")}" }, ##change it to FQDN
-        # { name = "MASQUE_ADMIN_DB_PORT", value = "5432" },
         { name = "MASQUE_ADMIN_DB_HOST", value = "${aws_db_instance.dm_pgdb[each.key].address}" }, ##change it to FQDN
         { name = "MASQUE_ADMIN_DB_PORT", value = tostring(aws_db_instance.dm_pgdb[each.key].port) },
         { name = "MASQUE_SANDBOX_PATH", value = "/files/user/" },
@@ -513,12 +509,6 @@ resource "aws_ecs_task_definition" "frontend_server" {
       name       = "${each.key}-admin-frontend"
       image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-frontend" : "${each.value["ecr"]["ecrRepoName"]}/admin-frontend"}:${each.value["ecr"]["ecrImageTag"]}"
       entryPoint = ["/entrypoint.sh"]
-      # entryPoint = ["/bin/sh", "-c"]
-      # command = [
-      #   # Redirect stdout and stderr to a log file in a shared volume
-      #   "exec /entrypoint.sh \"$@\" 2>&1 | tee /files/logs/entrypoint.log"
-      # ]
-
       essential = true
       user      = "1000:1000"
       logConfiguration = {
@@ -589,7 +579,7 @@ resource "aws_ecs_service" "dm_frontend_service" {
     registry_arn = aws_service_discovery_service.admin_frontend[each.key].arn
   }
 
-  network_configuration {
+  network_configuration { 
     subnets          = values(local.common_env_config.subnets)
     assign_public_ip = false
     security_groups  = [aws_security_group.ecs_sg[each.key].id] # Replace with your security group
