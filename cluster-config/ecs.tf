@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "agent_task" {
   container_definitions = jsonencode([
     {
       name              = "${each.key}-agent-worker"
-      image             = "${each.value["ecr"]["ecrRepo"] == "public" ? "897875381524" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent" : "${each.value["ecr"]["ecrRepoName"]}/agent"}:${each.value["ecr"]["ecrImageTag"]}"
+      image             = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent" : "${each.value["ecr"]["ecrRepoName"]}/agent"}:${each.value["ecr"]["ecrImageTag"]}"
       essential         = true
       user              = "1000:1000"
       entryPoint        = ["/entrypoint.sh"]
@@ -148,7 +148,7 @@ resource "aws_ecs_task_definition" "agent_queue" {
   container_definitions = jsonencode([
     {
       name      = "${each.key}-agent-queue"
-      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "897875381524" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent-queue" : "${each.value["ecr"]["ecrRepoName"]}/agent-queue"}:${each.value["ecr"]["ecrImageTag"]}"
+      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent-queue" : "${each.value["ecr"]["ecrRepoName"]}/agent-queue"}:${each.value["ecr"]["ecrImageTag"]}"
       essential = true
       user      = "1000:1000"
       portMappings = [{
@@ -217,7 +217,7 @@ resource "aws_ecs_task_definition" "admin_server" {
 
     {
       name       = "${each.key}-admin-server"
-      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "897875381524" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-server" : "${each.value["ecr"]["ecrRepoName"]}/admin-server"}:${each.value["ecr"]["ecrImageTag"]}"
+      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-server" : "${each.value["ecr"]["ecrRepoName"]}/admin-server"}:${each.value["ecr"]["ecrImageTag"]}"
       entryPoint = ["/entrypoint.sh"]
       essential  = true
       user       = "1000:1000" # Set the user to match EFS access point UID:GID
@@ -375,7 +375,7 @@ resource "aws_ecs_task_definition" "in_flight_server" {
   container_definitions = jsonencode([
     {
       name      = "${each.key}-in-flight-server"
-      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "897875381524" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/in-flight-server" : "${each.value["ecr"]["ecrRepoName"]}/in-flight-server"}:${each.value["ecr"]["ecrImageTag"]}"
+      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/in-flight-server" : "${each.value["ecr"]["ecrRepoName"]}/in-flight-server"}:${each.value["ecr"]["ecrImageTag"]}"
       essential = true
       user      = "1000:1000"
       cpu       = each.value["inflightContainer"]["cpu"]    # Minimum CPU for this container
@@ -511,7 +511,7 @@ resource "aws_ecs_task_definition" "frontend_server" {
   container_definitions = jsonencode([
     {
       name       = "${each.key}-admin-frontend"
-      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "897875381524" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-frontend" : "${each.value["ecr"]["ecrRepoName"]}/admin-frontend"}:${each.value["ecr"]["ecrImageTag"]}"
+      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-frontend" : "${each.value["ecr"]["ecrRepoName"]}/admin-frontend"}:${each.value["ecr"]["ecrImageTag"]}"
       entryPoint = ["/entrypoint.sh"]
       # entryPoint = ["/bin/sh", "-c"]
       # command = [
