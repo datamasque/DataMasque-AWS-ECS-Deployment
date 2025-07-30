@@ -91,7 +91,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 
-resource "aws_iam_role_policy" "efs_access_policy" {
+resource "aws_iam_role_policy" "ecs_task_access_policy" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
   name     = "${each.key}ECSTaskAccessPolicy"
   role     = aws_iam_role.ecs_task_role[each.key].id

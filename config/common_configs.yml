@@ -3,9 +3,9 @@ dev:
   db_subnetgroup: "db subnet group" #Name of the db subnet group to deploy RDS
   ingress_cidr: 10.x.x.x/x #CIDR range to allow connections to DataMasque application
   subnets: #Subnet IDs in the VPC
-    subnetb: "subnet-0axxxx" #2b private subnet
-    subnetc: "subnet-04xxxx" # 2c: private subnet
-    subneta: "subnet-0axxxx" #2a: private subnet
+    subnetb: "subnet-0axxxx" #b private subnet
+    subnetc: "subnet-04xxxx" #c: private subnet
+    subneta: "subnet-0axxxx" #a: private subnet
 
 prod:
   vpcid: "vpc-xxxx"
@@ -13,6 +13,6 @@ prod:
   db_subnetgroup: private-db-subnetgroup
   ingress_cidr: 10.x.x.x/x
   subnets:
-    subnetb: "subnet-0axxxx" #2b private subnet
-    subnetc: "subnet-04xxxx" # 2c: private subnet
-    subneta: "subnet-0axxxx" #2a: private subnet
+    subnetb: "subnet-0axxxx" #b private subnet
+    subnetc: "subnet-04xxxx" # c: private subnet
+    subneta: "subnet-0axxxx" #a: private subnet
