@@ -20,7 +20,6 @@ resource "aws_service_discovery_service" "admin_frontend" {
   }
 }
 
-
 resource "aws_service_discovery_service" "admin_server" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
   name     = "admin-server"
@@ -35,7 +34,6 @@ resource "aws_service_discovery_service" "admin_server" {
     failure_threshold = 1
   }
 }
-
 
 resource "aws_service_discovery_service" "admin_db" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -67,7 +65,6 @@ resource "aws_service_discovery_service" "queue" {
   }
 }
 
-
 resource "aws_service_discovery_service" "agent" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
   name     = "agent"
@@ -83,7 +80,6 @@ resource "aws_service_discovery_service" "agent" {
   }
 }
 
-
 resource "aws_service_discovery_service" "inflight" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
   name     = "in-flight-server"
@@ -98,5 +94,4 @@ resource "aws_service_discovery_service" "inflight" {
     failure_threshold = 1
   }
 }
-
 

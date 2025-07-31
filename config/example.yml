@@ -1,0 +1,21 @@
+ecs:
+  clusters:
+    datamasque-ecs:  # Name of the ECS fargate cluster.
+      dnsNamespace: datamasque  # AWS Cloud Map namespace
+      rds:
+        multiAz: false
+      ecr:
+        ecrRepoName: datamasque  # ECR repo prefix name
+        ecrImageTag: 2-28-0-final-xxxxx  # DataMasque image tag
+        ecrRepo: public  # Valid values are public / private. Images are fetched from DataMasque's public repo if set to `public`.
+        ecrRepoRegion: ap-southeast-2  # AWS region to fetch images from. Specify only if `ecrRepo` is set to `public`.
+      masqueVersion: "2.28.0"  # DataMasque version being deployed
+      loggingLevel: "INFO"  # DataMasque logging level
+      agentContainer:
+        cpu: 512  # CPU allocation for DataMasque agent container
+        memory: 2048  # Memory allocation for DataMasque agent container
+        desiredCount: 1  # Number of agent containers to deploy
+      inflightContainer:
+        cpu: 512  # CPU allocation for DataMasque inflight container
+        memory: 2048  # Memory allocation for DataMasque inflight container
+        desiredCount: 1  # Number of inflight containers to deploy

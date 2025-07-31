@@ -1,5 +1,4 @@
 
-
 resource "aws_security_group" "ecs_sg" {
   for_each    = lookup(local.ecs_config["ecs"], "clusters", {})
   name        = "${each.key}-dm-sg"
@@ -57,7 +56,6 @@ resource "aws_vpc_security_group_ingress_rule" "rds_sg_ingress_https2" {
   to_port                      = 5432
   description                  = "Allow traffic from DataMasque instance"
 }
-
 
 resource "aws_vpc_security_group_egress_rule" "rds_sg_egress" {
   for_each          = lookup(local.ecs_config["ecs"], "clusters", {})
