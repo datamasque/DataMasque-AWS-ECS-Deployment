@@ -541,7 +541,7 @@ resource "aws_ecs_task_definition" "frontend_server" {
 }
 
 resource "aws_ecs_service" "dm_frontend_service" {
-  depends_on             = [aws_ecs_service.dm_inflight_service]
+  depends_on             = [aws_ecs_service.dm_inflight_service, aws_lb_listener.this]
   for_each               = lookup(local.ecs_config["ecs"], "clusters", {})
   name                   = "${each.key}-dm-frontend-service"
   cluster                = aws_ecs_cluster.datamasque_cluster[each.key].id
@@ -551,6 +551,13 @@ resource "aws_ecs_service" "dm_frontend_service" {
   launch_type            = "FARGATE"
   service_registries {
     registry_arn = aws_service_discovery_service.admin_frontend[each.key].arn
+  }
+
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.this[each.key].arn
+    container_name   = "${each.key}-admin-frontend"
+    container_port   = 8443
   }
 
   network_configuration { 
