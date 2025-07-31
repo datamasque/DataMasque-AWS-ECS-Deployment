@@ -1,18 +1,8 @@
-dev:
-  vpcid: "vpc-xxxx" #VPC ID where DataMasque being deployed
-  db_subnetgroup: "db subnet group" #Name of the db subnet group to deploy RDS
-  ingress_cidr: 10.x.x.x/x #CIDR range to allow connections to DataMasque application
-  subnets: #Subnet IDs in the VPC
-    subnetb: "subnet-0axxxx" #b private subnet
-    subnetc: "subnet-04xxxx" #c: private subnet
-    subneta: "subnet-0axxxx" #a: private subnet
-
-prod:
-  vpcid: "vpc-xxxx"
-  db_subnetgroup: "db subnet group" #Name of the db subnet group to deploy RDS
-  db_subnetgroup: private-db-subnetgroup
-  ingress_cidr: 10.x.x.x/x
-  subnets:
-    subnetb: "subnet-0axxxx" #b private subnet
-    subnetc: "subnet-04xxxx" # c: private subnet
-    subneta: "subnet-0axxxx" #a: private subnet
+example:
+  vpcid: "vpc-xxxx"  # VPC ID where DataMasque being deployed
+  db_subnetgroup: "db subnet group"  # Name of the db subnet group to deploy RDS
+  inbound_cidr_range: 10.x.x.x/x  # CIDR range to allow connections to DataMasque application
+  subnets:  # Subnet IDs in the VPC
+    subneta: "subnet-0axxxx"  # a private subnet
+    subnetb: "subnet-0bxxxx"  # b private subnet
+    subnetc: "subnet-0cxxxx"  # c private subnet

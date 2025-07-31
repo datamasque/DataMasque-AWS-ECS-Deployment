@@ -26,7 +26,7 @@ resource "aws_ecs_task_definition" "agent_task" {
   container_definitions = jsonencode([
     {
       name              = "${each.key}-agent-worker"
-      image             = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent" : "${each.value["ecr"]["ecrRepoName"]}/agent"}:${each.value["ecr"]["ecrImageTag"]}"
+      image             = "${local.ecr_base_url[each.key]}/agent:${local.ecr_image_url[each.key].image_tag}"
       essential         = true
       user              = "1000:1000"
       entryPoint        = ["/entrypoint.sh"]
@@ -40,10 +40,6 @@ resource "aws_ecs_task_definition" "agent_task" {
         { name = "MASQUE_VERSION", value = each.value["masqueVersion"] },
         { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", "internal") }
       ]
-      # portMappings = [{
-      #   containerPort = 80 #To be verified
-      #   hostPort      = 80
-      # }]
 
       mountPoints = [
         { sourceVolume = "license", containerPath = "/license", readOnly = false },
@@ -65,7 +61,6 @@ resource "aws_ecs_task_definition" "agent_task" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -78,7 +73,6 @@ resource "aws_ecs_task_definition" "agent_task" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/files"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -91,7 +85,6 @@ resource "aws_ecs_task_definition" "agent_task" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/secrets"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -104,7 +97,6 @@ resource "aws_ecs_task_definition" "agent_task" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "datamasque-mounts"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -132,7 +124,6 @@ resource "aws_ecs_service" "datamasque_agent_service" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "agent_queue" {
   depends_on               = [aws_cloudwatch_log_group.ecs_log_group]
   for_each                 = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -148,14 +139,13 @@ resource "aws_ecs_task_definition" "agent_queue" {
   container_definitions = jsonencode([
     {
       name      = "${each.key}-agent-queue"
-      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/agent-queue" : "${each.value["ecr"]["ecrRepoName"]}/agent-queue"}:${each.value["ecr"]["ecrImageTag"]}"
+      image     = "${local.ecr_base_url[each.key]}/agent-queue:${local.ecr_image_url[each.key].image_tag}"
       essential = true
       user      = "1000:1000"
       portMappings = [{
         containerPort = 6379
         hostPort      = 6379
       }]
-
 
       environment = [
         {
@@ -200,7 +190,6 @@ resource "aws_ecs_service" "queue_service" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "admin_server" {
   depends_on               = [aws_cloudwatch_log_group.ecs_log_group]
   for_each                 = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -217,7 +206,7 @@ resource "aws_ecs_task_definition" "admin_server" {
 
     {
       name       = "${each.key}-admin-server"
-      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-server" : "${each.value["ecr"]["ecrRepoName"]}/admin-server"}:${each.value["ecr"]["ecrImageTag"]}"
+      image      = "${local.ecr_base_url[each.key]}/admin-server:${local.ecr_image_url[each.key].image_tag}"
       entryPoint = ["/entrypoint.sh"]
       essential  = true
       user       = "1000:1000" # Set the user to match EFS access point UID:GID
@@ -252,7 +241,6 @@ resource "aws_ecs_task_definition" "admin_server" {
           value = "agent-queue.${lookup(each.value, "dnsNamespace", "internal")}"
         }
 
-
       ]
       portMappings = [{
         name          = "uwsgi"
@@ -272,7 +260,6 @@ resource "aws_ecs_task_definition" "admin_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -285,7 +272,6 @@ resource "aws_ecs_task_definition" "admin_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -298,7 +284,6 @@ resource "aws_ecs_task_definition" "admin_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/files"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -311,7 +296,6 @@ resource "aws_ecs_task_definition" "admin_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/secrets"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -324,7 +308,6 @@ resource "aws_ecs_task_definition" "admin_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/datamasque-mounts"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -355,7 +338,6 @@ resource "aws_ecs_service" "dm_adminserver_service" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "in_flight_server" {
   depends_on               = [aws_cloudwatch_log_group.ecs_log_group]
   for_each                 = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -371,7 +353,7 @@ resource "aws_ecs_task_definition" "in_flight_server" {
   container_definitions = jsonencode([
     {
       name      = "${each.key}-in-flight-server"
-      image     = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/in-flight-server" : "${each.value["ecr"]["ecrRepoName"]}/in-flight-server"}:${each.value["ecr"]["ecrImageTag"]}"
+      image     = "${local.ecr_base_url[each.key]}/in-flight-server:${local.ecr_image_url[each.key].image_tag}"
       essential = true
       user      = "1000:1000"
       cpu       = each.value["inflightContainer"]["cpu"]    # Minimum CPU for this container
@@ -409,7 +391,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -422,7 +403,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -435,7 +415,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/files"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -448,7 +427,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/secrets"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -461,7 +439,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/datamasque-mounts"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -491,7 +468,6 @@ resource "aws_ecs_service" "dm_inflight_service" {
   }
 }
 
-
 resource "aws_ecs_task_definition" "frontend_server" {
   depends_on               = [aws_cloudwatch_log_group.ecs_log_group]
   for_each                 = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -507,7 +483,7 @@ resource "aws_ecs_task_definition" "frontend_server" {
   container_definitions = jsonencode([
     {
       name       = "${each.key}-admin-frontend"
-      image      = "${each.value["ecr"]["ecrRepo"] == "public" ? "269378400967" : data.aws_caller_identity.current.account_id}.dkr.ecr.${each.value["ecr"]["ecrRepo"] == "public" ? each.value["ecr"]["ecrRepoRegion"] : data.aws_region.current.name}.amazonaws.com/${each.value["ecr"]["ecrRepo"] == "public" ? "datamasque/admin-frontend" : "${each.value["ecr"]["ecrRepoName"]}/admin-frontend"}:${each.value["ecr"]["ecrImageTag"]}"
+      image      = "${local.ecr_base_url[each.key]}/admin-frontend:${local.ecr_image_url[each.key].image_tag}"
       entryPoint = ["/entrypoint.sh"]
       essential = true
       user      = "1000:1000"
@@ -544,7 +520,6 @@ resource "aws_ecs_task_definition" "frontend_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/license"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -557,7 +532,6 @@ resource "aws_ecs_task_definition" "frontend_server" {
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
-      # root_directory     = "/files"
       authorization_config {
         access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
         iam             = "ENABLED"
@@ -567,7 +541,7 @@ resource "aws_ecs_task_definition" "frontend_server" {
 }
 
 resource "aws_ecs_service" "dm_frontend_service" {
-  depends_on             = [aws_ecs_service.dm_inflight_service]
+  depends_on             = [aws_ecs_service.dm_inflight_service, aws_lb_listener.this]
   for_each               = lookup(local.ecs_config["ecs"], "clusters", {})
   name                   = "${each.key}-dm-frontend-service"
   cluster                = aws_ecs_cluster.datamasque_cluster[each.key].id
@@ -577,6 +551,13 @@ resource "aws_ecs_service" "dm_frontend_service" {
   launch_type            = "FARGATE"
   service_registries {
     registry_arn = aws_service_discovery_service.admin_frontend[each.key].arn
+  }
+
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.this[each.key].arn
+    container_name   = "${each.key}-admin-frontend"
+    container_port   = 8443
   }
 
   network_configuration { 

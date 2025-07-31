@@ -1,7 +1,5 @@
 # DM ECS Deployment
 
-
-
 ## Getting started
 
 DataMasque can be deployed on Amazon ECS Fargate using Elastic File System (EFS) as the persistent storage layer. In contrast to other platform deployments, the internal database used DataMasque application must be deployed as an external PostgreSQL database, preferably using Amazon RDS within the same VPC as the application.
@@ -9,7 +7,6 @@ DataMasque can be deployed on Amazon ECS Fargate using Elastic File System (EFS)
  
 
 Container images for the DataMasque application running on ECS can be either pushed to your account’s Amazon ECR (Elastic Container Registry) OR they can be consumed from DataMasque’s public ECR repositories - 
-
 
 `ap-southeast-2` - 
 ```
@@ -31,11 +28,9 @@ Container images for the DataMasque application running on ECS can be either pus
 269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/in-flight-server
 ```
 
-
 ## Deployment Overview
 
 This  Terrafrom based deployment process automates the creation of the following resources: - 
-
 
 - ECS Fargate cluster
 - ECS Services and Task Definitions
@@ -45,8 +40,7 @@ This  Terrafrom based deployment process automates the creation of the following
 - Security groups for ECS and RDS
 - AWS Cloud Map service discovery namespace and service entries
 
-
-##Prerequisite
+## Prerequisite
 Before starting the deployment, ensure the following tools are installed:
 
 - [ ] [aws CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
@@ -65,8 +59,6 @@ The repo_prefix must match the value of ecrRepoName in the environment_name.yaml
 
 Alternatively, you may configure the deployment to fetch images directly from DataMasque’s public ECR repositories in us-east-1 or ap-southeast-2.
 
-
-
 ## Deployment Steps
 
 1. Clone the deployment repository - 
@@ -83,8 +75,8 @@ Below is the example backend.tf, please replace the parameter values based on yo
 terraform {
   backend "s3" {
     key            = "datamasque-ecs/tfstate"
-    bucket         = "Bucket_name"
-    dynamodb_table = "dynamodb-tf-lock"
+    bucket         = "your-terraform-state-bucket"
+    use_lockfile   = true
     acl            = "bucket-owner-full-control"
     region         = "ap-southeast-2"
   }
@@ -95,11 +87,10 @@ terraform {
 
 `environment_name.yaml`
 
-This file defines deployment parameters specific to your environment. The filename (e.g., dev.yaml) must match the Terraform workspace name.
+This file defines deployment parameters specific to your environment. The filename (e.g., example.yaml) must match the Terraform workspace name.
 
 ```
 ecs:
-  # clusters: {}
   clusters:
     datamasque-ecs: #Name of the ECS fargate cluster.
       dnsNamespace: datamasque #Cloudmap namespace
@@ -123,30 +114,19 @@ ecs:
 
 ```
 
-
 `common_configs.yaml`
 
 This file contains environment-specific VPC, subnet, and network settings. Ensure the environment name matches the Terraform workspace and environment_name.yaml mentioned above.
 
 ```
-dev:
-  vpcid: "vpc-xxxx" #VPC ID where DataMasque being deployed
-  db_subnetgroup: "db subnet group" #Name of the db subnet group to deploy RDS
-  ingress_cidr: 10.x.x.x/x #CIDR range to allow connections to DataMasque application
-  subnets: #Subnet IDs in the VPC
-    subnetb: "subnet-0axxxx" #2b private subnet
-    subnetc: "subnet-04xxxx" # 2c: private subnet
-    subneta: "subnet-0axxxx" #2a: private subnet
-
-prod:
-  vpcid: "vpc-xxxx"
-  db_subnetgroup: "db subnet group" #Name of the db subnet group to deploy RDS
-  db_subnetgroup: private-db-subnetgroup
-  ingress_cidr: 10.x.x.x/x
-  subnets:
-    subnetb: "subnet-0axxxx" #2b private subnet
-    subnetc: "subnet-04xxxx" # 2c: private subnet
-    subneta: "subnet-0axxxx" #2a: private subnet
+example:
+  vpcid: "vpc-xxxx"  # VPC ID where DataMasque being deployed
+  db_subnetgroup: "db subnet group"  # Name of the db subnet group to deploy RDS
+  inbound_cidr_range: 10.x.x.x/x  # CIDR range to allow connections to DataMasque application
+  subnets:  # Subnet IDs in the VPC
+    subnetb: "subnet-0axxxx"  # b private subnet
+    subnetc: "subnet-04xxxx"  # c: private subnet
+    subneta: "subnet-0axxxx"  # a: private subnet
 ```
 
 4. Deploy DataMasque. 
@@ -155,7 +135,7 @@ prod:
 export AWS_PROFILE=profile_name
 cd cluster-config
 terraform init
-terraform workspace select -or-create dev
+terraform workspace select -or-create example
 terraform plan
 terraform apply
 ```

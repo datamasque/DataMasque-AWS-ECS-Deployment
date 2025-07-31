@@ -63,14 +63,12 @@ resource "aws_iam_role_policy" "ecs_task_execution_policy" {
   })
 }
 
-
 # Attach managed policy for ECS task execution
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
   for_each   = lookup(local.ecs_config["ecs"], "clusters", {})
   role       = aws_iam_role.ecs_task_execution_role[each.key].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
 
 resource "aws_iam_role" "ecs_task_role" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -89,7 +87,6 @@ resource "aws_iam_role" "ecs_task_role" {
     ]
   })
 }
-
 
 resource "aws_iam_role_policy" "ecs_task_access_policy" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})

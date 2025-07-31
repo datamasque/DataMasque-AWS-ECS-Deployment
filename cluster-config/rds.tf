@@ -7,7 +7,6 @@ resource "aws_db_instance" "dm_pgdb" {
   for_each   = lookup(local.ecs_config["ecs"], "clusters", {})
   identifier = "${each.key}-pg-dm-rds"
   engine     = "postgres"
-  # engine_version             = "15.3"
   instance_class             = "db.t4g.micro" # e.g. db.t4g.small
   allocated_storage          = 20             # GiB
   storage_type               = "gp3"
@@ -21,7 +20,6 @@ resource "aws_db_instance" "dm_pgdb" {
   skip_final_snapshot        = true
   deletion_protection        = false
   auto_minor_version_upgrade = true
-
 
   tags = {
     Environment = terraform.workspace
