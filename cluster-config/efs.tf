@@ -1,6 +1,5 @@
 resource "aws_efs_file_system" "datamasque_efs" {
   for_each = lookup(local.ecs_config["ecs"], "clusters", {})
-  # for_each       = (lookup(local.ecs_config, "ecs", {})["clusters"] != "" && local.ecs_config["ecs"]["clusters"] != null) ? lookup(local.ecs_config, "ecs", {})["clusters"] : {}
   creation_token = "${each.key}-efs"
   encrypted      = true
   tags = {
@@ -8,7 +7,7 @@ resource "aws_efs_file_system" "datamasque_efs" {
   }
 }
 
-##Capture VPC CIDR Block
+#Capture VPC CIDR Block
 
 data "aws_vpc" "get_vpc_details" {
   id = local.common_env_config["vpcid"]
@@ -36,7 +35,6 @@ resource "aws_efs_mount_target" "efs_mount_targets_subnetC" {
   subnet_id       = local.common_env_config["subnets"]["subnetc"]
   security_groups = [aws_security_group.ecs_efs_sg[each.key].id]
 }
-
 
 resource "aws_efs_access_point" "dm_efs_access_point" {
   for_each       = lookup(local.ecs_config["ecs"], "clusters", {})
@@ -74,7 +72,6 @@ resource "aws_efs_access_point" "dm_efs_access_point_admindb" {
 
 }
 
-
 resource "aws_security_group" "ecs_efs_sg" {
   for_each    = lookup(local.ecs_config["ecs"], "clusters", {})
   name        = "${each.key}-efs"
@@ -94,5 +91,3 @@ resource "aws_vpc_security_group_ingress_rule" "ecs_allow_tls_ipv4" {
   ip_protocol       = "tcp"
   to_port           = 2049
 }
-
-
