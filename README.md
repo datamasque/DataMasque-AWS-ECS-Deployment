@@ -9,21 +9,13 @@ This repository contains Terraform templates for deploying DataMasque on ECS.
 > the internal database used by the DataMasque application must be deployed as an external PostgreSQL database.
 > For this purpose, the Terraform plan deploys an Amazon RDS database within the same VPC as the ECS cluster.
 
-Container images for the DataMasque application running on ECS are available in DataMasque's public ECRs
-in the `ap-southeast-2` and `us-east-1` regions.
+Container images for the DataMasque application running on ECS are available in DataMasque's public ECR:
 
-- `ap-southeast-2`:
-  - `269378400967.dkr.ecr.ap-southeast-2.amazonaws.com/datamasque/admin-frontend`
-  - `269378400967.dkr.ecr.ap-southeast-2.amazonaws.com/datamasque/admin-server`
-  - `269378400967.dkr.ecr.ap-southeast-2.amazonaws.com/datamasque/agent`
-  - `269378400967.dkr.ecr.ap-southeast-2.amazonaws.com/datamasque/agent-queue`
-  - `269378400967.dkr.ecr.ap-southeast-2.amazonaws.com/datamasque/in-flight-server`
-- `us-east-1`:
-  - `269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/admin-frontend`
-  - `269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/admin-server`
-  - `269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/agent`
-  - `269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/agent-queue`
-  - `269378400967.dkr.ecr.us-east-1.amazonaws.com/datamasque/in-flight-server`
+- `public.ecr.aws/u4t6n7u6/datamasque/admin-frontend`
+- `public.ecr.aws/u4t6n7u6/datamasque/admin-server`
+- `public.ecr.aws/u4t6n7u6/datamasque/agent`
+- `public.ecr.aws/u4t6n7u6/datamasque/agent-queue`
+- `public.ecr.aws/u4t6n7u6/datamasque/in-flight-server`
 
 ## Deployment Overview
 
@@ -60,7 +52,7 @@ If using private ECR, create the following Amazon ECR repositories:
 
 The `<prefix>` must match the value of `ecrRepoName` in the environment configuration file.
 
-Alternatively, you may configure the deployment to fetch images directly from DataMasque's public ECR repositories in `us-east-1` or `ap-southeast-2`.
+Alternatively, you may configure the deployment to fetch images directly from DataMasque's public ECR repository.
 
 ## Deployment Steps
 
@@ -117,8 +109,7 @@ ecs:
       ecr:
         ecrRepoName: datamasque
         ecrImageTag: 2-28-0-final-xxxxx  # DataMasque image tag
-        ecrRepo: public
-        ecrRepoRegion: ap-southeast-2  # AWS region to fetch images from (ap-southeast-2 or us-east-1)
+        ecrRepo: public  # Use "public" to pull from DataMasque's public ECR, or "private" to use your own ECR
       masqueVersion: "2.28.0"  # DataMasque version being deployed
       loggingLevel: "INFO"  # DataMasque logging level
       agentContainer:
@@ -146,7 +137,6 @@ ecr:
   ecrRepoName: <prefix>  # Your ECR repo prefix from above
   ecrImageTag: 2-28-0-final-xxxxx  # DataMasque image tag
   ecrRepo: private
-  # Omit the ecrRepoRegion field - not required for private ECR
 ```
 
 #### Network Configuration File
