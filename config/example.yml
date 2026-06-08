@@ -7,9 +7,9 @@ ecs:
       albCertificate: xxxx-xxxx-xxxx-xxxx-xxxx  # UUID of the certificate in AWS Certificate Manager
       ecr:
         ecrRepoName: datamasque
-        ecrImageTag: 2-29-0-final-xxxxx  # DataMasque image tag
+        ecrImageTag: 3-26-11-0-final-xxxxx  # DataMasque image tag
         ecrRepo: public  # Use "public" to pull from DataMasque's public ECR, or "private" to use your own ECR
-      masqueVersion: "2.29.0"  # DataMasque version being deployed
+      masqueVersion: "3.26.11.0"  # DataMasque version being deployed
       loggingLevel: "INFO"  # DataMasque logging level
       agentContainer:
         cpu: 2048  # CPU allocation for DataMasque agent container (in units, where 1024 = one vCPU)

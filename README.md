@@ -12,8 +12,7 @@ This repository contains Terraform templates for deploying DataMasque on ECS.
 Container images for the DataMasque application running on ECS are available in DataMasque's public ECR:
 
 - `public.ecr.aws/u4t6n7u6/datamasque/admin-frontend`
-- `public.ecr.aws/u4t6n7u6/datamasque/admin-server`
-- `public.ecr.aws/u4t6n7u6/datamasque/agent`
+- `public.ecr.aws/u4t6n7u6/datamasque/app`
 - `public.ecr.aws/u4t6n7u6/datamasque/agent-queue`
 - `public.ecr.aws/u4t6n7u6/datamasque/in-flight-server`
 
@@ -45,8 +44,7 @@ If using private ECR, create the following Amazon ECR repositories:
 
 - `<ECR host>/<prefix>/admin-db`
 - `<ECR host>/<prefix>/admin-frontend`
-- `<ECR host>/<prefix>/admin-server`
-- `<ECR host>/<prefix>/agent`
+- `<ECR host>/<prefix>/app`
 - `<ECR host>/<prefix>/agent-queue`
 - `<ECR host>/<prefix>/in-flight-server`
 
@@ -108,9 +106,9 @@ ecs:
       albCertificate: xxxx-xxxx-xxxx-xxxx-xxxx  # UUID of the certificate in AWS Certificate Manager
       ecr:
         ecrRepoName: datamasque
-        ecrImageTag: 2-28-0-final-xxxxx  # DataMasque image tag
+        ecrImageTag: 3-26-11-0-final-xxxxx  # DataMasque image tag
         ecrRepo: public  # Use "public" to pull from DataMasque's public ECR, or "private" to use your own ECR
-      masqueVersion: "2.28.0"  # DataMasque version being deployed
+      masqueVersion: "3.26.11.0"  # DataMasque version being deployed
       loggingLevel: "INFO"  # DataMasque logging level
       agentContainer:
         cpu: 2048  # CPU allocation for DataMasque agent container (in units, where 1024 = one vCPU)
@@ -135,7 +133,7 @@ For a private ECR, edit the `ecr` block as follows:
 ```yaml
 ecr:
   ecrRepoName: <prefix>  # Your ECR repo prefix from above
-  ecrImageTag: 2-28-0-final-xxxxx  # DataMasque image tag
+  ecrImageTag: 3-26-11-0-final-xxxxx  # DataMasque image tag
   ecrRepo: private
 ```
 

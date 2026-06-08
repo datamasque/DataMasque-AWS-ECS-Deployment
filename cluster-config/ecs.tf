@@ -26,10 +26,10 @@ resource "aws_ecs_task_definition" "agent_task" {
   container_definitions = jsonencode([
     {
       name              = "${each.key}-agent-worker"
-      image             = "${local.ecr_base_url[each.key]}/agent:${local.ecr_image_url[each.key].image_tag}"
+      image             = "${local.ecr_base_url[each.key]}/app:${local.ecr_image_url[each.key].image_tag}"
       essential         = true
       user              = "1000:1000"
-      entryPoint        = ["/entrypoint.sh"]
+      entryPoint        = ["/entrypoint-agent.sh"]
       cpu               = each.value["agentContainer"]["cpu"]    # Minimum CPU for this container
       memory            = each.value["agentContainer"]["memory"] # Minimum memory for this container
       memoryReservation = 256                                    # Soft memory limit
@@ -206,8 +206,8 @@ resource "aws_ecs_task_definition" "admin_server" {
 
     {
       name       = "${each.key}-admin-server"
-      image      = "${local.ecr_base_url[each.key]}/admin-server:${local.ecr_image_url[each.key].image_tag}"
-      entryPoint = ["/entrypoint.sh"]
+      image      = "${local.ecr_base_url[each.key]}/app:${local.ecr_image_url[each.key].image_tag}"
+      entryPoint = ["/entrypoint-admin-server.sh"]
       essential  = true
       user       = "1000:1000" # Set the user to match EFS access point UID:GID
       logConfiguration = {
