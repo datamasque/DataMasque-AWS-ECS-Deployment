@@ -13,6 +13,10 @@ terraform {
 
 provider "aws" {
   default_tags {
-
+    tags = {
+      # DataMasque AWS PRM (Partner Revenue Measurement) attribution tag. Applied to every
+      # taggable resource this deployment provisions so the self-hosted ECS install is attributed.
+      "aws-apn-id" = "pc:dp9c56sw1n8t10q5s4pxlgl3x"
+    }
   }
 }
