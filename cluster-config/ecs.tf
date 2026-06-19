@@ -114,6 +114,7 @@ resource "aws_ecs_service" "datamasque_agent_service" {
   desired_count          = each.value["agentContainer"]["desiredCount"]
   enable_execute_command = true
   launch_type            = "FARGATE"
+  propagate_tags         = "TASK_DEFINITION"
 
   network_configuration {
     subnets         = values(local.common_env_config.subnets)
@@ -180,6 +181,7 @@ resource "aws_ecs_service" "queue_service" {
   desired_count          = 1
   enable_execute_command = true
   launch_type            = "FARGATE"
+  propagate_tags         = "TASK_DEFINITION"
 
   network_configuration {
     subnets         = values(local.common_env_config.subnets)
@@ -326,7 +328,8 @@ resource "aws_ecs_service" "dm_adminserver_service" {
   desired_count          = 1
   enable_execute_command = true
 
-  launch_type = "FARGATE"
+  launch_type    = "FARGATE"
+  propagate_tags = "TASK_DEFINITION"
   service_registries {
     registry_arn = aws_service_discovery_service.admin_server[each.key].arn
   }
@@ -457,6 +460,7 @@ resource "aws_ecs_service" "dm_inflight_service" {
   desired_count          = each.value["inflightContainer"]["desiredCount"]
   enable_execute_command = true
   launch_type            = "FARGATE"
+  propagate_tags         = "TASK_DEFINITION"
   service_registries {
     registry_arn = aws_service_discovery_service.inflight[each.key].arn
   }
@@ -549,6 +553,7 @@ resource "aws_ecs_service" "dm_frontend_service" {
   desired_count          = 1
   enable_execute_command = true
   launch_type            = "FARGATE"
+  propagate_tags         = "TASK_DEFINITION"
   service_registries {
     registry_arn = aws_service_discovery_service.admin_frontend[each.key].arn
   }
