@@ -1,5 +1,5 @@
 resource "aws_efs_file_system" "datamasque_efs" {
-  for_each = lookup(local.ecs_config["ecs"], "clusters", {})
+  for_each       = lookup(local.ecs_config["ecs"], "clusters", {})
   creation_token = "${each.key}-efs"
   encrypted      = true
   tags = {
@@ -46,27 +46,12 @@ resource "aws_efs_access_point" "dm_efs_access_point" {
   root_directory {
     path = "/datamasque/app"
     creation_info {
-      owner_uid   = 1000
-      owner_gid   = 1000
-      permissions = 777
-    }
-  }
-
-}
-
-resource "aws_efs_access_point" "dm_efs_access_point_admindb" {
-  for_each       = lookup(local.ecs_config["ecs"], "clusters", {})
-  file_system_id = aws_efs_file_system.datamasque_efs[each.key].id
-  posix_user {
-    gid = 999
-    uid = 999
-  }
-  root_directory {
-    path = "/datamasque/pgdata"
-    creation_info {
-      owner_uid   = 999
-      owner_gid   = 999
-      permissions = 777
+      owner_uid = 1000
+      owner_gid = 1000
+      # 770: owner (uid 1000) and group (gid 1000) get full rwx; no world
+      # access. All DataMasque containers run as 1000:1000, so they retain
+      # full read/write while world access is dropped.
+      permissions = 770
     }
   }
 

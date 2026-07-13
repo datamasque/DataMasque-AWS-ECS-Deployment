@@ -25,14 +25,13 @@ resource "aws_ecs_task_definition" "agent_task" {
 
   container_definitions = jsonencode([
     {
-      name              = "${each.key}-agent-worker"
-      image             = "${local.ecr_base_url[each.key]}/app:${local.ecr_image_url[each.key].image_tag}"
-      essential         = true
-      user              = "1000:1000"
-      entryPoint        = ["/entrypoint-agent.sh"]
-      cpu               = each.value["agentContainer"]["cpu"]    # Minimum CPU for this container
-      memory            = each.value["agentContainer"]["memory"] # Minimum memory for this container
-      memoryReservation = 256                                    # Soft memory limit
+      name       = "${each.key}-agent-worker"
+      image      = "${local.ecr_base_url[each.key]}/app:${local.ecr_image_url[each.key].image_tag}"
+      essential  = true
+      user       = "1000:1000"
+      entryPoint = ["/entrypoint-agent.sh"]
+      cpu        = each.value["agentContainer"]["cpu"]    # Minimum CPU for this container
+      memory     = each.value["agentContainer"]["memory"] # Minimum memory for this container
       environment = [
         { name = "LOGLEVEL", value = each.value["loggingLevel"] },
         { name = "MASQUE_SANDBOX_PATH", value = "/files/user/" },
@@ -118,7 +117,7 @@ resource "aws_ecs_service" "datamasque_agent_service" {
 
   network_configuration {
     subnets         = values(local.common_env_config.subnets)
-    security_groups = [aws_security_group.ecs_sg[each.key].id] # Replace with your security group
+    security_groups = [aws_security_group.ecs_sg[each.key].id]
   }
   service_registries {
     registry_arn = aws_service_discovery_service.agent[each.key].arn
@@ -147,6 +146,14 @@ resource "aws_ecs_task_definition" "agent_queue" {
         containerPort = 6379
         hostPort      = 6379
       }]
+      # The queue is a Redis service on 6379; redis-cli ships in the image.
+      healthCheck = {
+        command     = ["CMD-SHELL", "redis-cli ping | grep -q PONG || exit 1"]
+        interval    = 30
+        timeout     = 5
+        retries     = 3
+        startPeriod = 30
+      }
 
       environment = [
         {
@@ -231,7 +238,7 @@ resource "aws_ecs_task_definition" "admin_server" {
         { name = "MASQUE_ADMIN_DB_NAME", value = "postgres" },
         { name = "MASQUE_ADMIN_DB_USER", value = "postgres" },
         { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", "internal") },
-        { name = "MASQUE_ADMIN_DB_HOST", value = "${aws_db_instance.dm_pgdb[each.key].address}" }, ##change it to FQDN
+        { name = "MASQUE_ADMIN_DB_HOST", value = aws_db_instance.dm_pgdb[each.key].address },
         { name = "MASQUE_ADMIN_DB_PORT", value = tostring(aws_db_instance.dm_pgdb[each.key].port) },
         { name = "MASQUE_SANDBOX_PATH", value = "/files/user/" },
         {
@@ -259,18 +266,6 @@ resource "aws_ecs_task_definition" "admin_server" {
 
   volume {
     name = "license"
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
-      transit_encryption = "ENABLED"
-      authorization_config {
-        access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
-        iam             = "ENABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "certs"
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
@@ -337,7 +332,7 @@ resource "aws_ecs_service" "dm_adminserver_service" {
   network_configuration {
     subnets          = values(local.common_env_config.subnets)
     assign_public_ip = false
-    security_groups  = [aws_security_group.ecs_sg[each.key].id] # Replace with your security group
+    security_groups  = [aws_security_group.ecs_sg[each.key].id]
   }
 }
 
@@ -391,18 +386,6 @@ resource "aws_ecs_task_definition" "in_flight_server" {
   }])
   volume {
     name = "license"
-    efs_volume_configuration {
-      file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
-      transit_encryption = "ENABLED"
-      authorization_config {
-        access_point_id = aws_efs_access_point.dm_efs_access_point[each.key].id
-        iam             = "ENABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "certs"
     efs_volume_configuration {
       file_system_id     = aws_efs_file_system.datamasque_efs[each.key].id
       transit_encryption = "ENABLED"
@@ -468,7 +451,7 @@ resource "aws_ecs_service" "dm_inflight_service" {
   network_configuration {
     subnets          = values(local.common_env_config.subnets)
     assign_public_ip = false
-    security_groups  = [aws_security_group.ecs_sg[each.key].id] # Replace with your security group
+    security_groups  = [aws_security_group.ecs_sg[each.key].id]
   }
 }
 
@@ -489,8 +472,8 @@ resource "aws_ecs_task_definition" "frontend_server" {
       name       = "${each.key}-admin-frontend"
       image      = "${local.ecr_base_url[each.key]}/admin-frontend:${local.ecr_image_url[each.key].image_tag}"
       entryPoint = ["/entrypoint.sh"]
-      essential = true
-      user      = "1000:1000"
+      essential  = true
+      user       = "1000:1000"
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -506,7 +489,6 @@ resource "aws_ecs_task_definition" "frontend_server" {
       environment = [
         { name = "HOST_IP", value = "127.0.0.1" },
         { name = "MASQUE_VERSION", value = each.value["masqueVersion"] },
-        # { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", ".internal") }
         { name = "MASQUE_ADMIN_SERVER_HOST", value = "admin-server.${lookup(each.value, "dnsNamespace", "internal")}" },
         { name = "MASQUE_IN_FLIGHT_SERVER_HOST", value = "in-flight-server.${lookup(each.value, "dnsNamespace", "internal")}" },
         { name = "MASQUE_ADMIN_FRONTEND_HOST", value = "localhost" }
@@ -565,9 +547,9 @@ resource "aws_ecs_service" "dm_frontend_service" {
     container_port   = 8443
   }
 
-  network_configuration { 
+  network_configuration {
     subnets          = values(local.common_env_config.subnets)
     assign_public_ip = false
-    security_groups  = [aws_security_group.ecs_sg[each.key].id] # Replace with your security group
+    security_groups  = [aws_security_group.ecs_sg[each.key].id]
   }
 }
