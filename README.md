@@ -1,4 +1,24 @@
-# DataMasque Installation on AWS Elastic Container Service (ECS) Fargate
+# DataMasque on AWS ECS Fargate
+
+> **Reference blueprint — adapt to your environment.** This repository is a
+> starting point, not a turnkey product. Review and harden IAM, networking,
+> secrets, and TLS for your own environment before any production use.
+
+DataMasque replaces sensitive production data with synthetically identical
+customer data, so teams can build and test against production-shaped data
+without exposing PII. This blueprint stands up a self-hosted DataMasque
+instance on **AWS ECS Fargate**, with Terraform provisioning the cluster, an
+EFS persistent layer, an RDS PostgreSQL application database, service
+discovery, and an internal Application Load Balancer. The outcome is a private,
+internally reachable DataMasque install you can run masking jobs from. Both the
+RDS database and the EFS filesystem are encrypted at rest with the default
+AWS-managed KMS key.
+
+**Learn more:** [datamasque.com](https://datamasque.com) ·
+[Product docs](https://datamasque.com/portal/documentation/) ·
+[Book a demo](https://datamasque.com/request-a-demo)
+
+---
 
 ## Getting Started
 
@@ -40,9 +60,9 @@ Before starting the deployment, ensure the following software is installed:
 
 ### Private ECR Setup (Optional)
 
-If using private ECR, create the following Amazon ECR repositories:
+If using private ECR, create the following Amazon ECR repositories
+(these mirror the public ECR images this deployment pulls):
 
-- `<ECR host>/<prefix>/admin-db`
 - `<ECR host>/<prefix>/admin-frontend`
 - `<ECR host>/<prefix>/app`
 - `<ECR host>/<prefix>/agent-queue`
@@ -75,13 +95,16 @@ Below is the example `backend.tf`. Replace the parameter values based on your en
 terraform {
   backend "s3" {
     key            = "datamasque-ecs/tfstate"
-    bucket         = "bucket-name"
+    bucket         = "your-terraform-state-bucket"  # replace with your state bucket
     use_lockfile   = true
     acl            = "bucket-owner-full-control"
     region         = "ap-southeast-2"
   }
 }
 ```
+
+The S3 backend bucket must already exist and is **not** created by this
+Terraform plan.
 
 ### Step 3: Update Configuration Files
 
@@ -103,6 +126,9 @@ ecs:
       dnsNamespace: datamasque  # AWS Cloud Map namespace. NB: It is not possible to change this after deployment.
       rds:
         multiAz: false
+        deletionProtection: false  # Set true to block accidental RDS deletion (recommended for prod)
+        skipFinalSnapshot: true    # Set false to take a final snapshot on destroy
+      maskingBuckets: []  # S3 buckets DataMasque may read/write for file masking. Empty = no S3 access granted.
       albCertificate: xxxx-xxxx-xxxx-xxxx-xxxx  # UUID of the certificate in AWS Certificate Manager
       ecr:
         ecrRepoName: datamasque
@@ -142,6 +168,10 @@ ecr:
 The `config/common_configs.yml` file contains environment-specific VPC, subnet, and network settings.
 Ensure the environment name matches the Terraform workspace name and the name of the deployment parameters file.
 
+> **Prerequisite:** The RDS DB subnet group named in `db_subnetgroup` is looked
+> up, **not created**, by this plan. Create it first (covering the private
+> subnets listed in `subnets`) or the apply will fail to find it.
+
 ```yaml
 production:
   vpcid: "vpc-xxxx"  # VPC ID where DataMasque is being deployed
@@ -180,6 +210,17 @@ The `apply` operation takes about 5-10 minutes.
 
 Once deployed, you can access DataMasque through the Application Load Balancer internal hostname.
 
+## Tearing Down
+
+Run `terraform destroy` to remove the deployment.
+
+> **Irreversible:** `destroy` deletes the RDS instance and the EFS filesystem
+> (including all DataMasque metadata, rulesets, and run history). By default
+> `skip_final_snapshot = true` and `deletion_protection = false`, so **no final
+> snapshot is taken**. For environments you cannot afford to lose, set
+> `rds.deletionProtection: true` and `rds.skipFinalSnapshot: false` in your
+> environment config (see `config/example.yml`) before applying.
+
 ## Next Steps
 
 It is recommended you back up your Terraform configuration files,
@@ -188,3 +229,13 @@ for example in a version control system.
 For more details including IAM permission requirements and detailed troubleshooting steps,
 please refer to the [full DataMasque documentation](https://datamasque.com/portal/documentation/)
 (select your DataMasque version, then **Setup** -> **Installation on Amazon ECS**).
+
+---
+
+## Related DataMasque blueprints
+
+- [AWS RDS masking (Step Functions)](https://github.com/datamasque/DataMasque-AWS-RDS-masking-stepfunctions-blueprint)
+- [Azure DB masking (Logic Apps)](https://github.com/datamasque/DataMasque-Azure-DB-masking-logicapps-blueprint)
+- [AWS Service Catalog DB provisioning](https://github.com/datamasque/DataMasque-AWS-service-catalog-database-provisioning-blueprint)
+- [AWS Cross-Account Bucket Access](https://github.com/datamasque/DataMasque-AWS-Cross-Account-Bucket-Access)
+- [masque-bricks (Databricks)](https://github.com/datamasque/masque-bricks)
