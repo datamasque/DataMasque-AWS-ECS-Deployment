@@ -1,7 +1,7 @@
 
 resource "random_password" "masque_admin_db_password" {
   for_each         = lookup(local.ecs_config["ecs"], "clusters", {})
-  length           = 8       # Length of the password
+  length           = 24      # Length of the password
   special          = true    # Include special characters
   upper            = true    # Include uppercase letters
   lower            = true    # Include lowercase letters
@@ -11,9 +11,11 @@ resource "random_password" "masque_admin_db_password" {
 
 # Store the password in AWS Secrets Manager
 resource "aws_secretsmanager_secret" "datamasque_postgres" {
-  for_each                = lookup(local.ecs_config["ecs"], "clusters", {})
-  name                    = "${each.key}-dm-ecs-db-password"
-  recovery_window_in_days = 0
+  for_each = lookup(local.ecs_config["ecs"], "clusters", {})
+  name     = "${each.key}-dm-ecs-db-password"
+  # Retain deleted secrets for a recovery window instead of immediate purge, so
+  # an accidental destroy can be undone within the window.
+  recovery_window_in_days = 7
 }
 
 resource "aws_secretsmanager_secret_version" "datamasque_postgres_version" {
