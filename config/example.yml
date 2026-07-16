@@ -4,6 +4,9 @@ ecs:
       dnsNamespace: datamasque  # AWS Cloud Map namespace. NB: It is not possible to change this after deployment.
       rds:
         multiAz: false
+        deletionProtection: false  # Set true to block accidental RDS deletion (recommended for prod)
+        skipFinalSnapshot: true    # Set false to take a final snapshot on destroy
+      maskingBuckets: []  # S3 bucket names DataMasque may read/write for file masking, e.g. [my-source-bucket, my-masked-bucket]. Empty = no S3 access.
       albCertificate: xxxx-xxxx-xxxx-xxxx-xxxx  # UUID of the certificate in AWS Certificate Manager
       ecr:
         ecrRepoName: datamasque
@@ -11,6 +14,7 @@ ecs:
         ecrRepo: public  # Use "public" to pull from DataMasque's public ECR, or "private" to use your own ECR
       masqueVersion: "3.26.11.0"  # DataMasque version being deployed
       loggingLevel: "INFO"  # DataMasque logging level
+      logRetentionDays: 7  # CloudWatch log retention (days). Raise for compliance/audit retention.
       agentContainer:
         cpu: 2048  # CPU allocation for DataMasque agent container (in units, where 1024 = one vCPU)
         memory: 4096  # Memory allocation for DataMasque agent container (in MB)

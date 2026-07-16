@@ -38,13 +38,13 @@ resource "aws_security_group" "ecs_sg" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ecs_sg_ingress_https" {
-  for_each          = lookup(local.ecs_config["ecs"], "clusters", {})
-  security_group_id = aws_security_group.ecs_sg[each.key].id
-  referenced_security_group_id         = aws_security_group.alb_sg[each.key].id
-  from_port         = 8443
-  ip_protocol       = "tcp"
-  to_port           = 8443
-  description       = "Allow HTTPS traffic"
+  for_each                     = lookup(local.ecs_config["ecs"], "clusters", {})
+  security_group_id            = aws_security_group.ecs_sg[each.key].id
+  referenced_security_group_id = aws_security_group.alb_sg[each.key].id
+  from_port                    = 8443
+  ip_protocol                  = "tcp"
+  to_port                      = 8443
+  description                  = "Allow HTTPS traffic"
 }
 
 resource "aws_vpc_security_group_ingress_rule" "ecs_sg_ingress_https2" {
@@ -85,6 +85,8 @@ resource "aws_vpc_security_group_ingress_rule" "rds_sg_ingress_https2" {
   description                  = "Allow traffic from DataMasque instance"
 }
 
+# RDS egress is unrestricted, but the instance is publicly_accessible = false
+# and its ingress only admits the ECS SG. Tighten if your policy requires it.
 resource "aws_vpc_security_group_egress_rule" "rds_sg_egress" {
   for_each          = lookup(local.ecs_config["ecs"], "clusters", {})
   security_group_id = aws_security_group.rds_sg[each.key].id
@@ -94,6 +96,9 @@ resource "aws_vpc_security_group_egress_rule" "rds_sg_egress" {
   to_port           = -1
 }
 
+# ECS tasks need outbound to ECR (image pull), Secrets Manager, AWS License
+# Manager, CloudWatch, and the customer databases being masked, so egress is
+# left open. Restrict to known destinations if your masking targets are fixed.
 resource "aws_vpc_security_group_egress_rule" "ecs_sg_egress" {
   for_each          = lookup(local.ecs_config["ecs"], "clusters", {})
   security_group_id = aws_security_group.ecs_sg[each.key].id

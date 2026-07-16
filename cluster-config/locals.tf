@@ -18,8 +18,8 @@ locals {
   # Private ECR: `<account ID>.dkr.ecr.<region>.amazonaws.com/<repo prefix>`
   ecr_base_url = {
     for cluster_key in keys(local.ecr_image_url) : cluster_key =>
-      local.ecr_image_url[cluster_key].is_public ?
-        "public.ecr.aws/${local.ecr_image_url[cluster_key].repo_base}" :
-        "${local.ecr_image_url[cluster_key].account_id}.dkr.ecr.${local.ecr_image_url[cluster_key].region}.amazonaws.com/${local.ecr_image_url[cluster_key].repo_base}"
+    local.ecr_image_url[cluster_key].is_public ?
+    "public.ecr.aws/${local.ecr_image_url[cluster_key].repo_base}" :
+    "${local.ecr_image_url[cluster_key].account_id}.dkr.ecr.${local.ecr_image_url[cluster_key].region}.amazonaws.com/${local.ecr_image_url[cluster_key].repo_base}"
   }
 }
