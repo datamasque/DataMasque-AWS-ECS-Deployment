@@ -19,6 +19,7 @@ ecs:
         cpu: 2048  # CPU allocation for DataMasque agent container (in units, where 1024 = one vCPU)
         memory: 4096  # Memory allocation for DataMasque agent container (in MB)
         desiredCount: 1  # Number of agent containers to deploy
+        tableReferenceStorageGiB: 20  # Disk that table references are stored in. The task's ephemeral storage is sized to this plus 5 GiB of headroom, or to the 21 GiB Fargate requires at the least.
       inflightContainer:
         cpu: 512  # CPU allocation for DataMasque inflight container (in units)
         memory: 2048  # Memory allocation for DataMasque inflight container (in MB)

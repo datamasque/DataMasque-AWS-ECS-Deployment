@@ -23,6 +23,10 @@ resource "aws_ecs_task_definition" "agent_task" {
   task_role_arn            = aws_iam_role.ecs_task_role[each.key].arn
   execution_role_arn       = aws_iam_role.ecs_task_execution_role[each.key].arn
 
+  ephemeral_storage {
+    size_in_gib = local.agent_ephemeral_storage_gib[each.key]
+  }
+
   container_definitions = jsonencode([
     {
       name       = "${each.key}-agent-worker"
@@ -37,7 +41,8 @@ resource "aws_ecs_task_definition" "agent_task" {
         { name = "MASQUE_SANDBOX_PATH", value = "/files/user/" },
         { name = "MASQUE_ENV", value = "prod" },
         { name = "MASQUE_VERSION", value = each.value["masqueVersion"] },
-        { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", "internal") }
+        { name = "MASQUE_HOST_SUFFIX", value = lookup(each.value, "dnsNamespace", "internal") },
+        { name = "MASQUE_TABLE_REFERENCE_STORAGE", value = "${local.agent_table_reference_storage_gib[each.key]}Gi" }
       ]
 
       mountPoints = [
