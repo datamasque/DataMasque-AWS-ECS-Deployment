@@ -22,4 +22,17 @@ locals {
     "public.ecr.aws/${local.ecr_image_url[cluster_key].repo_base}" :
     "${local.ecr_image_url[cluster_key].account_id}.dkr.ecr.${local.ecr_image_url[cluster_key].region}.amazonaws.com/${local.ecr_image_url[cluster_key].repo_base}"
   }
+
+  agent_table_reference_storage_gib = {
+    for cluster_key, cluster_config in lookup(local.ecs_config["ecs"], "clusters", {}) :
+    cluster_key => lookup(cluster_config["agentContainer"], "tableReferenceStorageGiB", 20)
+  }
+
+  agent_ephemeral_storage_headroom_gib = 5
+
+  # Fargate refuses an ephemeral storage size below 21 GiB.
+  agent_ephemeral_storage_gib = {
+    for cluster_key, storage_gib in local.agent_table_reference_storage_gib :
+    cluster_key => max(21, storage_gib + local.agent_ephemeral_storage_headroom_gib)
+  }
 }
